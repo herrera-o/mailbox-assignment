@@ -3,6 +3,7 @@ package dev.herrerao;
 import java.io.File;
 import java.io.IOException;
 import java.sql.*;
+import java.util.ArrayList;
 
 public class DataStorage {
     private String DB_PATH = "./data/mydb";
@@ -71,6 +72,34 @@ public class DataStorage {
         }
 
         return userID;
+    }
+
+    public ArrayList<Message> getMessages(int recipientID) throws Exception {
+        ArrayList<Message> messages = new ArrayList<>();
+        String sql = """
+            SELECT m.id, m.sender_id, u.name AS sender_name, m.subject, m.body, m.sent_at, m.is_read
+            FROM messages m
+            JOIN users u ON m.sender_id = u.id
+            WHERE m.recipient_id = ?;
+            """;
+        try (Connection conn = DriverManager.getConnection(this.url, this.username, this.password);
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, recipientID);
+                ResultSet rs = stmt.executeQuery();
+
+                while (rs.next()) {
+                    messages.add(new Message(
+                            rs.getInt("id"),
+                            rs.getInt("sender_id"),
+                            rs.getString("sender_name"),
+                            rs.getString("subject"),
+                            rs.getString("body"),
+                            rs.getTimestamp("sent_at").toLocalDateTime(),
+                            rs.getBoolean("is_read")
+                    ));
+                }
+        }
+        return messages;
     }
 
 }
