@@ -2,7 +2,10 @@ package dev.herrerao;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DataStorageTest {
 
@@ -28,5 +31,32 @@ public class DataStorageTest {
         }  catch (Exception e){
             throw new RuntimeException(e);
         }
+    }
+
+    @Test
+    void testSendMessage() {
+        try{
+            DataStorage ds = new DataStorage();
+            assertEquals(true,
+                    ds.sendMessage("0", "1", "Test", "This message is a test."));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    void getMessages() {
+        try {
+            DataStorage ds = new DataStorage();
+            ArrayList<Message> messages = ds.getMessages(0);
+
+            for (Message msg : messages) {
+                System.out.println(msg);
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        assertTrue(true);
     }
 }

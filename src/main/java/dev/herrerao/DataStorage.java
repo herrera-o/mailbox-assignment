@@ -68,6 +68,21 @@ public class DataStorage {
        return (status > 0);
     }
 
+    public Boolean sendMessage(String sender_id, String recipient_id, String subject, String body) throws Exception {
+        int status = 0;
+        try (Connection conn = DriverManager.getConnection(this.url, this.username, this.password);
+            PreparedStatement stmt = conn.prepareStatement(
+                    "INSERT INTO messages (sender_id, recipient_id, subject, body) VALUES (?, ?, ?, ?)"
+            )) {
+            stmt.setString(1, sender_id);
+            stmt.setString(2, recipient_id);
+            stmt.setString(3, subject);
+            stmt.setString(4, body);
+            status = stmt.executeUpdate();
+        }
+        return (status > 0);
+    }
+
     public int getUserID(String username) throws Exception {
         int userID = -1;
         String sql = "SELECT id FROM users WHERE name = ?";
