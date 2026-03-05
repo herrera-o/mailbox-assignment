@@ -3,6 +3,7 @@ package dev.herrerao;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -48,10 +49,13 @@ public class DataStorageTest {
     void getMessages() {
         try {
             DataStorage ds = new DataStorage();
-            ArrayList<Message> messages = ds.getMessages(0);
+            HashMap<Integer, ArrayList<Message>> messages = ds.getMessages(0);
 
-            for (Message msg : messages) {
-                System.out.println(msg);
+            for (Integer msgID : messages.keySet()) {
+                System.out.println("Message ID: " + msgID);
+                for (Message message : messages.get(msgID)) {
+                    System.out.println(message);
+                }
             }
 
         } catch (Exception e) {

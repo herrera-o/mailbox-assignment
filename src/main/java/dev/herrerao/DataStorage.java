@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class DataStorage {
     private String DB_PATH = "./data/mydb";
@@ -100,8 +101,8 @@ public class DataStorage {
         return userID;
     }
 
-    public ArrayList<Message> getMessages(int recipientID) throws Exception {
-        ArrayList<Message> messages = new ArrayList<>();
+    public HashMap<Integer, ArrayList<Message>> getMessages(int recipientID) throws Exception {
+        HashMap<Integer, ArrayList<Message>> cache = new HashMap<>();
         String sql = """
             SELECT m.id, m.sender_id, u.name AS sender_name, m.subject, m.body, m.sent_at, m.is_read
             FROM messages m
@@ -114,7 +115,7 @@ public class DataStorage {
                 ResultSet rs = stmt.executeQuery();
 
                 while (rs.next()) {
-                    messages.add(new Message(
+                    Message query = new Message(
                             rs.getInt("id"),
                             rs.getInt("sender_id"),
                             rs.getString("sender_name"),
@@ -122,10 +123,19 @@ public class DataStorage {
                             rs.getString("body"),
                             rs.getTimestamp("sent_at").toLocalDateTime(),
                             rs.getBoolean("is_read")
-                    ));
+                    );
+
+                    if (cache.containsKey(query.senderID())) {
+                        ArrayList<Message> list = cache.get(query.senderID());
+                        list.add(query);
+                    } else {
+                        ArrayList<Message> list = new ArrayList<>();
+                        list.add(query);
+                        cache.put(query.senderID(), list);
+                    }
                 }
         }
-        return messages;
+        return cache;
     }
 
 }
