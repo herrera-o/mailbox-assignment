@@ -9,9 +9,18 @@ public class DataStorage {
     private String DB_PATH = "./data/mydb";
     private String url = "jdbc:hsqldb:file:" + DB_PATH + ";shutdown=true";
     private String username = "sa";
-    private String password = "";
+    private String password = "as";
 
-    public DataStorage() {}
+    public DataStorage() throws Exception {
+        Class.forName("org.hsqldb.jdbc.JDBCDriver");
+        if (!checkIfDatabaseExists()) {
+            System.out.println("Setting up database...");
+            Connection conn = DriverManager.getConnection(this.url, this.username, this.password);
+            initializeDatabase(conn);
+        } else {
+            System.out.println("Database already exists.");
+        }
+    }
 
     private boolean checkIfDatabaseExists() {
         return new File(DB_PATH + ".properties").exists();
@@ -38,9 +47,11 @@ public class DataStorage {
                 sent_at TIMESTAMP DEFAULT NOW(),
                 is_read BOOLEAN DEFAULT FALSE,
                 FOREIGN KEY(sender_id) REFERENCES users(id),
-                FOREIGN KEY(recipient_id) REFERENCES users(id),
+                FOREIGN KEY(recipient_id) REFERENCES users(id)
                 )
                 """);
+        } finally {
+            conn.close();
         }
     }
 
@@ -58,8 +69,8 @@ public class DataStorage {
     }
 
     public int getUserID(String username) throws Exception {
-        int userID = 0;
-        String sql = "SELECT id FROM users WHERE username = ?";
+        int userID = -1;
+        String sql = "SELECT id FROM users WHERE name = ?";
 
         try (Connection conn = DriverManager.getConnection(this.url, this.username, this.password);
             PreparedStatement stmt = conn.prepareStatement(sql)) {
