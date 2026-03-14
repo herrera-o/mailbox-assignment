@@ -49,7 +49,7 @@ public class DataStorageTest {
     void getMessages() {
         try {
             DataStorage ds = new DataStorage();
-            HashMap<Integer, ArrayList<Message>> messages = ds.getMessages(0);
+            HashMap<Integer, ArrayList<Message>> messages = ds.getMessages(1);
 
             for (Integer msgID : messages.keySet()) {
                 System.out.println("Message ID: " + msgID);

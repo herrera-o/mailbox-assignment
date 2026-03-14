@@ -2,16 +2,15 @@ package dev.herrerao;
 
 import org.hsqldb.Database;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import javax.xml.crypto.Data;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Server {
-    private Database database;
+    private DataStorage database;
 
-    public Server(Database database) {
+    public Server(DataStorage database) {
         this.database = database;
     }
 
@@ -19,6 +18,7 @@ public class Server {
         new Thread(() -> {
             try {
                 ServerSocket serverSocker = new ServerSocket(8000);
+                System.out.println("Listening on port: 8000");
 
                 while (true) {
                     Socket socket = serverSocker.accept();
@@ -27,10 +27,10 @@ public class Server {
                     new Thread(new HandleClient(socket)).start();
                 }
 
-            } catch (IOException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-        });
+        }).start();
     }
 
     class HandleClient implements Runnable {
@@ -43,14 +43,22 @@ public class Server {
         @Override
         public void run() {
             try {
-                DataInputStream inputFromClient = new DataInputStream(socket.getInputStream());
-                DataOutputStream outputToClient = new DataOutputStream(socket.getOutputStream());
+                InputStream in = socket.getInputStream();
+                BufferedReader input = new BufferedReader(new InputStreamReader(in));
+                PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
 
-                while(true) {
-                    String command = inputFromClient.readUTF();
-                    System.out.println(command);
+                while (true) {
+                    output.println("Welcome to mailbox.");
+                    output.print("Enter username: ");
+                    output.flush();
+                    String username = input.readLine();
+                    output.print("Enter password: ");
+                    output.flush();
+                    String password = input.readLine();
 
+                    output.println("You entered: " + username + " | " + password);
                     // login
+
 
                 }
 
