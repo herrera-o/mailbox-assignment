@@ -48,16 +48,33 @@ public class Server {
                 PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
 
                 while (true) {
+                    String command;
                     output.println("Welcome to mailbox.");
-                    output.print("Enter username: ");
-                    output.flush();
-                    String username = input.readLine();
-                    output.print("Enter password: ");
-                    output.flush();
-                    String password = input.readLine();
-
-                    output.println("You entered: " + username + " | " + password);
-                    // login
+                    output.println("Existing User? [Y]es [N]o");
+                    command = input.readLine();
+                    
+                    
+                    switch (command) {
+                        case "Y":
+                            if (logIn(input, output)) {
+                                userMenu(input, output);
+                            } else {
+                                output.println("Wrong username or password!");
+                            }
+                            break;
+                        case "N" :
+                        case "n":
+                        case "No":
+                        case "no":
+                            createUser(input, output);
+                            output.flush();
+                            output.println("User created!");
+                            break;
+                        default:
+                            output.println("Invalid command.");
+                    }
+                    
+                    
 
 
                 }
@@ -65,6 +82,39 @@ public class Server {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
+        }
+
+        private void createUser(BufferedReader input, PrintWriter output) throws Exception {
+            String username;
+            String password;
+
+            output.println("---Create User---");
+            output.print("New username: ");
+            output.flush();
+            username = input.readLine();
+            output.print("New password: ");
+            output.flush();
+            password = input.readLine();
+
+            database.addUser(username, password);
+        }
+
+        private void userMenu(BufferedReader input, PrintWriter output)  {
+
+        }
+
+        private boolean logIn(BufferedReader input, PrintWriter output) throws IOException {
+            output.print("Enter username: ");
+            output.flush();
+            String username = input.readLine();
+            output.print("Enter password: ");
+            output.flush();
+            String password = input.readLine();
+
+            output.println("You entered: " + username + " | " + password);
+            // login
+
+            return false;
         }
     }
 }
