@@ -5,8 +5,8 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+
 
 public class DataStorageTest {
 
@@ -40,6 +40,31 @@ public class DataStorageTest {
             DataStorage ds = new DataStorage();
             assertEquals(true,
                     ds.insertMessage(0, 1, "Test", "This message is a test."));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    void testGetUserValidCredentials() {
+        try {
+            DataStorage ds = new DataStorage();
+            ds.addUser("testuser", "testpass");
+            User user = ds.getUser("testuser", "testpass");
+            assertNotNull(user);
+            assertEquals("testuser", user.name());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    void testGetUserInvalidCredentials() {
+        try {
+            DataStorage ds = new DataStorage();
+            ds.addUser("testuser2", "correctpass");
+            User user = ds.getUser("testuser2", "wrongpass");
+            assertNull(user);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

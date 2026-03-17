@@ -100,6 +100,23 @@ public class DataStorage {
         return userID;
     }
 
+    public User getUser(String username, String password) throws Exception {
+        User user = null;
+        String sql = "SELECT id, name FROM users WHERE name = ? AND password = ?";
+        try (Connection conn = DriverManager.getConnection(this.url, this.username, this.password);
+        PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            stmt.setString(2, password);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                user = new User(rs.getInt("id"), rs.getString("name"));
+            }
+        };
+
+        return user;
+    }
+
     public HashMap<Integer, ArrayList<Message>> getMessages(int recipientID) throws Exception {
         HashMap<Integer, ArrayList<Message>> cache = new HashMap<>();
         String sql = """
