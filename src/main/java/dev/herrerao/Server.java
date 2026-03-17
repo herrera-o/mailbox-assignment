@@ -1,14 +1,13 @@
 package dev.herrerao;
 
-import org.hsqldb.Database;
-
-import javax.xml.crypto.Data;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Server {
-    private DataStorage database;
+    private final DataStorage database;
 
     public Server(DataStorage database) {
         this.database = database;
@@ -17,12 +16,13 @@ public class Server {
     public void startServer() {
         new Thread(() -> {
             try {
-                ServerSocket serverSocker = new ServerSocket(8000);
+                ServerSocket serverSocket = new ServerSocket(8000);
                 System.out.println("Listening on port: 8000");
 
                 while (true) {
-                    Socket socket = serverSocker.accept();
-                    System.out.println("Accepted connection from " + socket.getInetAddress().getHostName());
+                    Socket socket = serverSocket.accept();
+                    System.out.println("Accepted connection from "
+                            + socket.getInetAddress().getHostName());
 
                     new Thread(new HandleClient(socket)).start();
                 }
@@ -34,7 +34,8 @@ public class Server {
     }
 
     class HandleClient implements Runnable {
-        private Socket socket;
+        private final Socket socket;
+        private User loggedInUser = null;
 
         public HandleClient(Socket socket) {
             this.socket = socket;
@@ -42,79 +43,112 @@ public class Server {
 
         @Override
         public void run() {
-            try {
-                InputStream in = socket.getInputStream();
-                BufferedReader input = new BufferedReader(new InputStreamReader(in));
-                PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
-
+            try (
+                    ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
+                    ObjectInputStream input = new ObjectInputStream(socket.getInputStream())
+            ) {
                 while (true) {
-                    String command;
-                    output.println("Welcome to mailbox.");
-                    output.println("Existing User? [Y]es [N]o");
-                    command = input.readLine();
-                    
-                    
-                    switch (command) {
-                        case "Y":
-                            if (logIn(input, output)) {
-                                userMenu(input, output);
-                            } else {
-                                output.println("Wrong username or password!");
-                            }
-                            break;
-                        case "N" :
-                        case "n":
-                        case "No":
-                        case "no":
-                            createUser(input, output);
-                            output.flush();
-                            output.println("User created!");
-                            break;
-                        default:
-                            output.println("Invalid command.");
+                    Object request = input.readObject();
+
+                    if (!(request instanceof String line)) {
+                        output.writeObject("ERROR: invalid request");
+                        output.flush();
+                        continue;
                     }
-                    
-                    
 
-
+                    handleCommand(line.trim(), output, input);
                 }
 
+            } catch (EOFException e) {
+                System.out.println("Client disconnected.");
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
 
-        private void createUser(BufferedReader input, PrintWriter output) throws Exception {
-            String username;
-            String password;
+        private void handleCommand(String line, ObjectOutputStream output, ObjectInputStream input) throws Exception {
+            if (line.startsWith("REGISTER ")) {
+                String[] args = line.substring("REGISTER ".length()).split("\\|", 2);
+                if (args.length < 2) {
+                    output.writeObject("ERROR: Wrong number of arguments");
+                    output.flush();
+                    return;
+                }
 
-            output.println("---Create User---");
-            output.print("New username: ");
-            output.flush();
-            username = input.readLine();
-            output.print("New password: ");
-            output.flush();
-            password = input.readLine();
+                boolean success = database.addUser(args[0], args[1]);
+                output.writeObject(success ? "SUCCESS" : "FAILURE");
+                output.flush();
 
-            database.addUser(username, password);
-        }
+            } else if (line.startsWith("LOGIN ")) {
+                String[] args = line.substring("LOGIN ".length()).split("\\|", 2);
+                if (args.length < 2) {
+                    output.writeObject("ERROR: Wrong number of arguments");
+                    output.flush();
+                    return;
+                }
 
-        private void userMenu(BufferedReader input, PrintWriter output)  {
+                User user = database.getUser(args[0], args[1]);
+                if (user != null) {
+                    loggedInUser = user;
+                    output.writeObject("SUCCESS " + user.id());
+                } else {
+                    output.writeObject("ERROR: wrong username or password");
+                }
+                output.flush();
 
-        }
+            } else if (line.equals("INBOX")) {
+                if (loggedInUser == null) {
+                    output.writeObject("ERROR: not_logged_in");
+                    output.flush();
+                    return;
+                }
 
-        private boolean logIn(BufferedReader input, PrintWriter output) throws IOException {
-            output.print("Enter username: ");
-            output.flush();
-            String username = input.readLine();
-            output.print("Enter password: ");
-            output.flush();
-            String password = input.readLine();
+                HashMap<Integer, ArrayList<Message>> messages =
+                        database.getMessages(loggedInUser.id());
 
-            output.println("You entered: " + username + " | " + password);
-            // login
+                if (messages.isEmpty()) {
+                    output.writeObject("ERROR: no messages");
+                    output.flush();
+                    return;
+                }
 
-            return false;
+                output.writeObject(messages);
+                output.flush();
+
+            } else if (line.equals("SEND")) {
+                if (loggedInUser == null) {
+                    output.writeObject("ERROR: not_logged_in");
+                    output.flush();
+                    return;
+                }
+
+                output.writeObject("READY");
+                Object readObject = input.readObject();
+
+                if (readObject instanceof Message message) {
+                    if (database.insertMessage(message)) {
+                        output.writeObject("SENT");
+                    } else {
+                        output.writeObject("FAIL");
+                    }
+                } else {
+                    output.writeObject("ERROR: wrong message data");
+                }
+            } else if (line.equals("GET_USER_ID")) {
+                if (loggedInUser == null) {
+                    output.writeObject("ERROR: not_logged_in");
+                }
+
+                Object readObject = input.readObject();
+
+                if (readObject instanceof String username) {
+                    output.writeObject(database.getUserID(username));
+                }
+
+            } else {
+                output.writeObject("ERROR: unknown command");
+                output.flush();
+            }
         }
     }
 }
