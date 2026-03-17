@@ -68,6 +68,10 @@ public class DataStorage {
        return (status > 0);
     }
 
+    public Boolean insertMessage(Message message) throws Exception {
+        return insertMessage(message.senderID(), message.recipientID(), message.subject(), message.body());
+    }
+
     public Boolean insertMessage(int sender_id, int recipient_id, String subject, String body) throws Exception {
         int status = 0;
         try (Connection conn = DriverManager.getConnection(this.url, this.username, this.password);
@@ -120,7 +124,7 @@ public class DataStorage {
     public HashMap<Integer, ArrayList<Message>> getMessages(int recipientID) throws Exception {
         HashMap<Integer, ArrayList<Message>> cache = new HashMap<>();
         String sql = """
-            SELECT m.id, m.sender_id, u.name AS sender_name, m.subject, m.body, m.sent_at, m.is_read
+            SELECT m.id, m.sender_id, m.recipient_id, u.name AS sender_name, m.subject, m.body, m.sent_at, m.is_read
             FROM messages m
             JOIN users u ON m.sender_id = u.id
             WHERE m.recipient_id = ?;
@@ -134,6 +138,7 @@ public class DataStorage {
                     Message query = new Message(
                             rs.getInt("id"),
                             rs.getInt("sender_id"),
+                            rs.getInt("recipient_id"),
                             rs.getString("sender_name"),
                             rs.getString("subject"),
                             rs.getString("body"),
