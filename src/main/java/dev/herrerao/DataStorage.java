@@ -1,7 +1,6 @@
 package dev.herrerao;
 
 import java.io.File;
-import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -69,14 +68,14 @@ public class DataStorage {
        return (status > 0);
     }
 
-    public Boolean sendMessage(String sender_id, String recipient_id, String subject, String body) throws Exception {
+    public Boolean insertMessage(int sender_id, int recipient_id, String subject, String body) throws Exception {
         int status = 0;
         try (Connection conn = DriverManager.getConnection(this.url, this.username, this.password);
             PreparedStatement stmt = conn.prepareStatement(
                     "INSERT INTO messages (sender_id, recipient_id, subject, body) VALUES (?, ?, ?, ?)"
             )) {
-            stmt.setString(1, sender_id);
-            stmt.setString(2, recipient_id);
+            stmt.setInt(1, sender_id);
+            stmt.setInt(2, recipient_id);
             stmt.setString(3, subject);
             stmt.setString(4, body);
             status = stmt.executeUpdate();

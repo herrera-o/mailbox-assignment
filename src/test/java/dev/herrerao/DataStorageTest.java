@@ -35,11 +35,11 @@ public class DataStorageTest {
     }
 
     @Test
-    void testSendMessage() {
+    void testInsertMessage() {
         try{
             DataStorage ds = new DataStorage();
             assertEquals(true,
-                    ds.sendMessage("0", "1", "Test", "This message is a test."));
+                    ds.insertMessage(0, 1, "Test", "This message is a test."));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
