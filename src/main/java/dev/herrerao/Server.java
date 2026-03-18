@@ -45,7 +45,7 @@ public class Server {
         public void run() {
             try (
                     ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
-                    ObjectInputStream input = new ObjectInputStream(socket.getInputStream())
+                    ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
             ) {
                 while (true) {
                     Object request = input.readObject();
