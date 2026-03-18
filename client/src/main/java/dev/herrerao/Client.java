@@ -18,7 +18,7 @@ public class Client {
     private ObjectInputStream input;
 
     private HashMap<Integer, ArrayList<Message>> inbox;
-    private HashMap<Integer, User> users;
+    private HashMap<Integer, User> users; // was going to use this field as a contact list
     private User loggedInUser = null;
 
     public Client(String host, int port) {
