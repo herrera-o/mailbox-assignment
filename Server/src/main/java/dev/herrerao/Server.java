@@ -20,10 +20,11 @@ public class Server {
                 System.out.println("Listening on port: 8000");
 
                 while (true) {
-                    Socket socket = serverSocket.accept();
+                    Socket socket = serverSocket.accept(); // start accepting connections on port 8000
                     System.out.println("Accepted connection from "
                             + socket.getInetAddress().getHostName());
 
+                    // A new thread is created to handle each incoming client.
                     new Thread(new HandleClient(socket)).start();
                 }
 
@@ -33,6 +34,7 @@ public class Server {
         }).start();
     }
 
+    // This class handles client commands
     class HandleClient implements Runnable {
         private final Socket socket;
         private User loggedInUser = null;
@@ -67,6 +69,10 @@ public class Server {
         }
 
         private void handleCommand(String line, ObjectOutputStream output, ObjectInputStream input) throws Exception {
+
+            /*
+                The REGISTER command handles user account creation.
+             */
             if (line.startsWith("REGISTER ")) {
                 String[] args = line.substring("REGISTER ".length()).split("\\|", 2);
                 if (args.length < 2) {
@@ -79,7 +85,12 @@ public class Server {
                 output.writeObject(success ? "SUCCESS" : "FAILURE");
                 output.flush();
 
+
             } else if (line.startsWith("LOGIN ")) {
+                /*
+                    LOGIN command logs users in.
+                    Server keeps track of the currently logged in server.
+                 */
                 String[] args = line.substring("LOGIN ".length()).split("\\|", 2);
                 if (args.length < 2) {
                     output.writeObject("ERROR: Wrong number of arguments");
@@ -97,6 +108,10 @@ public class Server {
                 output.flush();
 
             } else if (line.equals("INBOX")) {
+                /*
+                    INBOX command queries the messages from the database for
+                    the currently logged in user.
+                 */
                 if (loggedInUser == null) {
                     output.writeObject("ERROR: not_logged_in");
                     output.flush();
@@ -116,25 +131,32 @@ public class Server {
                 output.flush();
 
             } else if (line.equals("SEND")) {
+                /*
+                    SEND, inserts a new message into the database.
+                 */
                 if (loggedInUser == null) {
                     output.writeObject("ERROR: not_logged_in");
                     output.flush();
                     return;
                 }
 
+                // Server is now ready to receive the message object.
                 output.writeObject("READY");
                 Object readObject = input.readObject();
 
                 if (readObject instanceof Message message) {
                     if (database.insertMessage(message)) {
-                        output.writeObject("SENT");
+                        output.writeObject("SENT"); // Message inserted
                     } else {
+                        // Database couldn't complete the insert statement.
                         output.writeObject("FAIL");
                     }
                 } else {
+                    // Object received was not a message record
                     output.writeObject("ERROR: wrong message data");
                 }
             } else if (line.equals("GET_USER_ID")) {
+                // GET_USER_ID: returns a user's ID
                 if (loggedInUser == null) {
                     output.writeObject("ERROR: not_logged_in");
                 }
@@ -146,6 +168,7 @@ public class Server {
                 }
 
             } else {
+                // Wrong commands
                 output.writeObject("ERROR: unknown command");
                 output.flush();
             }

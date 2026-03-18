@@ -28,6 +28,7 @@ public class Client {
         users = new HashMap<>();
     }
 
+    // Connects to the mailbox server
     public void connect() throws IOException {
         socket = new Socket(host, port);
 
@@ -39,6 +40,7 @@ public class Client {
         System.out.println("Connected to " + host + ":" + port);
     }
 
+    // Close input and output streams. Close socket as well.
     public void close() {
         try {
             if (input != null) { input.close(); }
@@ -61,6 +63,7 @@ public class Client {
         System.out.println("Closed connection to " + host + ":" + port);
     }
 
+    // Send commands to the server and return the response.
     public Object sendCommand(String command) throws Exception {
         output.writeObject(command);
         output.flush();
@@ -68,7 +71,9 @@ public class Client {
         return input.readObject();
     }
 
+    // Sends server a message object
     public String sendMessage(String recipientUsername, String subject, String body) throws Exception {
+        // User id is checked first if the recipient exists.
         output.writeObject("GET_USER_ID");
         output.flush();
         output.writeObject(recipientUsername);
@@ -79,17 +84,19 @@ public class Client {
             return "ERROR: recipient not found";
         }
 
+        // Check if server is ready
         Object ready = sendCommand("SEND");
         if (!"READY".equals(ready)) {
             return "ERROR: " + ready;
         }
 
+        // Create message record
         Message message = new Message(0, loggedInUser.id(), recipientID,
                 loggedInUser.name(), subject, body, LocalDateTime.now(), false);
-        output.writeObject(message);
+        output.writeObject(message); // Send message record to server.
         output.flush();
 
-        return (String) input.readObject();
+        return (String) input.readObject(); // return server's response
     }
 
     public static void main(String[] args) {
@@ -103,6 +110,7 @@ public class Client {
             System.out.println("___ client mailbox ___");
 
             while (running) {
+                // User menu
                 System.out.println("\n--- MENU ---");
                 System.out.println("1. Register");
                 System.out.println("2. Login");
@@ -114,6 +122,7 @@ public class Client {
                 String choice = sc.nextLine().trim();
 
                 switch (choice) {
+                    // Case 1: User creation.
                     case "1" -> {
                         System.out.print("Enter username: ");
                         String username = sc.nextLine().trim();
@@ -131,6 +140,7 @@ public class Client {
                         }
                     }
 
+                    // Case 2: user login
                     case "2" -> {
                         System.out.print("Enter username: ");
                         String username = sc.nextLine().trim();
@@ -152,6 +162,7 @@ public class Client {
                         }
                     }
 
+                    // Case 3: print message of the currently logged in user
                     case "3" -> {
                         Object response = client.sendCommand("INBOX");
 
@@ -172,6 +183,7 @@ public class Client {
                         }
                     }
 
+                    // Case 4: Create and send a new message
                     case "4" -> {
                         System.out.print("Enter recipient username: ");
                         String recipient = sc.nextLine().trim();
@@ -186,6 +198,7 @@ public class Client {
                         System.out.println("Server: " + result);
                     }
 
+                    // Close out connections.
                     case "5" -> {
                         System.out.println("Exiting. . .");
                         running = false;

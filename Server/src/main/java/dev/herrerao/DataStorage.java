@@ -5,12 +5,24 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+/*
+    For the DataStorage class, I am using HSQLDB as the underlying database.
+    The DataStorage class creates a new connection per operation and closes it.
+    HSQLDB handles thread safety internally at the database level, by managing concurrent access
+    across those connections using its own internal locking and transaction system. Therefore,
+    no synchronized blocks are needed in the DataStorage class.
+ */
+
 public class DataStorage {
     private String DB_PATH = "./data/mydb";
     private String url = "jdbc:hsqldb:file:" + DB_PATH + ";shutdown=true";
     private String username = "sa";
     private String password = "as";
 
+    /*
+        When a new instance is created, a check is made to determine if the database exists in the filesystem.
+        If it doesn't, the database is created.
+     */
     public DataStorage() throws Exception {
         Class.forName("org.hsqldb.jdbc.JDBCDriver");
         if (!checkIfDatabaseExists()) {
@@ -22,10 +34,16 @@ public class DataStorage {
         }
     }
 
+    /*
+        Checks if database on disk.
+     */
     private boolean checkIfDatabaseExists() {
         return new File(DB_PATH + ".properties").exists();
     }
 
+    /*
+        Creates the tables for users and messages.
+     */
     private void initializeDatabase(Connection conn) throws Exception {
         // create table
         try(Statement stmt = conn.createStatement()) {
@@ -55,6 +73,9 @@ public class DataStorage {
         }
     }
 
+    /*
+        Insert a user into the database.
+     */
     public Boolean addUser(String username, String password) throws Exception {
        int status = 0;
        try (Connection conn = DriverManager.getConnection(this.url, this.username, this.password);
@@ -68,6 +89,9 @@ public class DataStorage {
        return (status > 0);
     }
 
+    /*
+        Inserts a message into the database using a message record.
+     */
     public Boolean insertMessage(Message message) throws Exception {
         return insertMessage(message.senderID(), message.recipientID(), message.subject(), message.body());
     }
@@ -87,6 +111,9 @@ public class DataStorage {
         return (status > 0);
     }
 
+    /*
+        Queries the database for a user's ID
+     */
     public int getUserID(String username) throws Exception {
         int userID = -1;
         String sql = "SELECT id FROM users WHERE name = ?";
@@ -104,6 +131,9 @@ public class DataStorage {
         return userID;
     }
 
+    /*
+        Queries a specific user from the database and returns a User record.
+     */
     public User getUser(String username, String password) throws Exception {
         User user = null;
         String sql = "SELECT id, name FROM users WHERE name = ? AND password = ?";
@@ -121,6 +151,10 @@ public class DataStorage {
         return user;
     }
 
+    /*
+        Queries database for set of messages by recipientID.
+        Method returns a HashMap<Integer, ArrayList<message>> object to client.
+     */
     public HashMap<Integer, ArrayList<Message>> getMessages(int recipientID) throws Exception {
         HashMap<Integer, ArrayList<Message>> cache = new HashMap<>();
         String sql = """
