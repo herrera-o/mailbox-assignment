@@ -77,7 +77,7 @@ public class DataStorageTest {
             HashMap<Integer, ArrayList<Message>> messages = ds.getMessages(1);
 
             for (Integer msgID : messages.keySet()) {
-                System.out.println("Message ID: " + msgID);
+                System.out.println("dev.herrerao.Message ID: " + msgID);
                 for (Message message : messages.get(msgID)) {
                     System.out.println(message);
                 }

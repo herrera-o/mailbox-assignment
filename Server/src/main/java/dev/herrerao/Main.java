@@ -1,6 +1,5 @@
 package dev.herrerao;
 
-
 public class Main {
     static void main() {
         try {

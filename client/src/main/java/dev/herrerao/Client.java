@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 
 public class Client {
@@ -15,10 +17,13 @@ public class Client {
     private ObjectInputStream input;
 
     private HashMap<Integer, ArrayList<Message>> inbox;
+    private HashMap<Integer, User> users;
 
     public Client(String host, int port) {
         this.host = host;
         this.port = port;
+
+        users = new HashMap<>();
     }
 
     public void connect() throws IOException {
@@ -76,7 +81,8 @@ public class Client {
                 System.out.println("1. Register");
                 System.out.println("2. Login");
                 System.out.println("3. View Inbox");
-                System.out.println("4. Quit");
+                System.out.println("4. Send");
+                System.out.println("5. Quit");
                 System.out.print("Choose an option: ");
 
                 String choice = sc.nextLine().trim();
@@ -114,6 +120,24 @@ public class Client {
                         } else {
                             System.out.println("Error: something went wrong");
                         }
+                    }
+
+                    case "3" -> {
+                        Object response = client.sendCommand("INBOX");
+
+                        if (response instanceof String message) {
+                            System.out.println("Server: " + message);
+                        } else if (response instanceof HashMap<?, ?> map) {
+                            client.inbox = (HashMap<Integer, ArrayList<Message>>) map;
+                        }
+                    }
+
+                    case "4" -> {
+                        System.out.print("Enter recipient: ");
+                        String recipient = sc.nextLine().trim();
+
+
+
                     }
                 }
             }
