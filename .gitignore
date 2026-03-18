@@ -37,3 +37,4 @@ build/
 
 ### Ignore DB ###
 data/*
+Server/data/*
