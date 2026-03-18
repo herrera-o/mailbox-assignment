@@ -159,6 +159,16 @@ public class Client {
                             System.out.println("Server: " + message);
                         } else if (response instanceof HashMap<?, ?> map) {
                             client.inbox = (HashMap<Integer, ArrayList<Message>>) map;
+
+                            for (ArrayList<Message> messages : client.inbox.values()) {
+                                for (Message msg : messages) {
+                                    System.out.println("\n--- Message ---");
+                                    System.out.println("From:    " + msg.senderName());
+                                    System.out.println("Subject: " + msg.subject());
+                                    System.out.println("Sent:    " + msg.sent_at());
+                                    System.out.println("Body:    " + msg.body());
+                                }
+                            }
                         }
                     }
 
