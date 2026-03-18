@@ -185,6 +185,11 @@ public class Client {
                         String result = client.sendMessage(recipient, subject, body);
                         System.out.println("Server: " + result);
                     }
+
+                    case "5" -> {
+                        System.out.println("Exiting. . .");
+                        running = false;
+                    }
                 }
             }
 
