@@ -1,7 +1,7 @@
 package dev.herrerao;
 
 public class Main {
-    static void main() {
+    public static void main(String[] args) {
         try {
 
             Server srv = new Server(new DataStorage());

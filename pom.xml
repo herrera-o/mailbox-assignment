@@ -9,9 +9,9 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
+        <module>shared</module>
         <module>client</module>
         <module>Server</module>
-        <module>shared</module>
     </modules>
 
     <properties>
