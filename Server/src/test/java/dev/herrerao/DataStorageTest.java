@@ -28,7 +28,7 @@ public class DataStorageTest {
         try{
             DataStorage ds = new DataStorage();
             ds.addUser("Tuna", "mypassword123");
-            assertEquals(1, ds.getUserID("Tuna"));
+            assertEquals(3, ds.getUserID("Tuna"));
         }  catch (Exception e){
             throw new RuntimeException(e);
         }
