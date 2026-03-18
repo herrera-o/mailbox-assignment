@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -18,6 +19,7 @@ public class Client {
 
     private HashMap<Integer, ArrayList<Message>> inbox;
     private HashMap<Integer, User> users;
+    private User loggedInUser = null;
 
     public Client(String host, int port) {
         this.host = host;
@@ -66,7 +68,31 @@ public class Client {
         return input.readObject();
     }
 
-    static void main() {
+    public String sendMessage(String recipientUsername, String subject, String body) throws Exception {
+        output.writeObject("GET_USER_ID");
+        output.flush();
+        output.writeObject(recipientUsername);
+        output.flush();
+        Object idResponse = input.readObject();
+
+        if (!(idResponse instanceof Integer recipientID) || recipientID == -1) {
+            return "ERROR: recipient not found";
+        }
+
+        Object ready = sendCommand("SEND");
+        if (!"READY".equals(ready)) {
+            return "ERROR: " + ready;
+        }
+
+        Message message = new Message(0, loggedInUser.id(), recipientID,
+                loggedInUser.name(), subject, body, LocalDateTime.now(), false);
+        output.writeObject(message);
+        output.flush();
+
+        return (String) input.readObject();
+    }
+
+    public static void main(String[] args) {
         Client client = new Client("localhost", 8000);
         Scanner sc = new Scanner(System.in);
 
@@ -117,6 +143,10 @@ public class Client {
 
                         if (response instanceof String message) {
                             System.out.println("Server: " + message);
+                            if (message.startsWith("SUCCESS ")) {
+                                int userID = Integer.parseInt(message.split(" ")[1]);
+                                client.loggedInUser = new User(userID, username);
+                            }
                         } else {
                             System.out.println("Error: something went wrong");
                         }
@@ -133,11 +163,17 @@ public class Client {
                     }
 
                     case "4" -> {
-                        System.out.print("Enter recipient: ");
+                        System.out.print("Enter recipient username: ");
                         String recipient = sc.nextLine().trim();
 
+                        System.out.print("Enter subject: ");
+                        String subject = sc.nextLine().trim();
 
+                        System.out.print("Enter body: ");
+                        String body = sc.nextLine().trim();
 
+                        String result = client.sendMessage(recipient, subject, body);
+                        System.out.println("Server: " + result);
                     }
                 }
             }
